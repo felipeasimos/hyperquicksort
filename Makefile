@@ -12,7 +12,7 @@ FILE ?=results_4.plt
 VALGRIND_COMMAND:=valgrind -q --tool=memcheck\
 		--track-origins=yes
 
-.PHONY: run debug clear clean benchmark results statistics save
+.PHONY: run debug clean statistics plot
 all: $(TARGET)
 
 # for compiling
