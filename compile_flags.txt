@@ -1,0 +1,4 @@
+-I
+/home/felipe/Coding/c/openmpi/openmpi-4.1.1/include
+-D
+DEBUG
