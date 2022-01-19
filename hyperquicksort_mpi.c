@@ -1,6 +1,8 @@
+#include <bits/stdint-uintn.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdint.h>
 #include <mpi.h>
 #include <stdlib.h>
 #include <time.h>
@@ -113,7 +115,7 @@ void* scatter_array(void* arr, unsigned long element_size, unsigned long num_ele
     return local_arr;
 }
 
-void gather_array(void* arr, unsigned long element_size, unsigned long num_elements, unsigned long local_num_elements, void* local_arr, int comm_size, int rank) {
+void gather_array(void* arr, unsigned long element_size, unsigned long local_num_elements, void* local_arr, int comm_size, int rank) {
 
     // get all local_arrs back into arr
     if(!rank) {
@@ -121,7 +123,7 @@ void gather_array(void* arr, unsigned long element_size, unsigned long num_eleme
         memcpy(arr, local_arr, element_size * local_num_elements);
         // get pointer to where we will be writing next
         void* next_partition_write = get_element(arr, element_size, local_num_elements);
-        for(unsigned long i = 1; i < comm_size; i++) {
+        for(unsigned long i = 1; i < (unsigned long)comm_size; i++) {
 
             // get partition size
             MPI_Recv(&local_num_elements, 1, MPI_UNSIGNED_LONG, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -248,7 +250,7 @@ void _hyperquicksort(void* local_arr, unsigned long element_size, unsigned long*
 
 void hyperquicksort(void* arr, unsigned long element_size, unsigned long num_elements, arr_type (*cmp_func)(void* a, void* b), int comm_size, int world_rank) {
 
-    if(num_elements <= comm_size) {
+    if(num_elements <= (unsigned long)comm_size) {
         if(!world_rank) quicksort(arr, element_size, num_elements, arr_type_cmp);
         return;
     }
@@ -267,7 +269,7 @@ void hyperquicksort(void* arr, unsigned long element_size, unsigned long num_ele
 
 #ifdef DEBUG
         MPI_Barrier(MPI_COMM_WORLD);
-        gather_array(arr, element_size, num_elements, local_num_elements, local_arr, comm_size, world_rank);
+        gather_array(arr, element_size, local_num_elements, local_arr, comm_size, world_rank);
         printf("iter: %lu, rank %d, number of elements: %lu\n",i,  world_rank, local_num_elements);
         MPI_Barrier(MPI_COMM_WORLD);
         if(!world_rank) {
@@ -280,7 +282,7 @@ void hyperquicksort(void* arr, unsigned long element_size, unsigned long num_ele
 #endif
     }
 
-    gather_array(arr, element_size, num_elements, local_num_elements, local_arr, comm_size, world_rank);
+    gather_array(arr, element_size, local_num_elements, local_arr, comm_size, world_rank);
     free(local_arr);
 }
 

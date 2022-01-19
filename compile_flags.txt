@@ -2,3 +2,12 @@
 /home/felipe/Coding/c/openmpi/openmpi-4.1.1/include
 -D
 DEBUG
+-pedantic-errors
+-Wall
+-Wextra
+-std=c99
+-fPIC
+-Werror
+-fopenmp
+-I
+/usr/lib/clang/11.0.1/include
