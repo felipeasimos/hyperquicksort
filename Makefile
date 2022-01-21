@@ -45,10 +45,9 @@ omp_run: $(TARGET_OMP)
 	done;
 
 plot:
-	gnuplot -e "plot '$(FILE_OMP)' using 1:2 title 'quicksort OMP' with lines,\
-		'$(FILE_MPI)' using 1:2 title 'quicksort MPI' with lines,\
-		'$(FILE_OMP)' using 1:3 title 'hyperquicksort OMP' with lines,\
-		'$(FILE_MPI)' using 1:3 title 'hyperquicksort MPI' with lines;\
+	gnuplot -e "plot '$(FILE_OMP)' using 1:2 title 'quicksort' with lines lc rgb 'blue',\
+		'$(FILE_OMP)' using 1:3 title 'hyperquicksort OMP' with lines lc rgb 'red',\
+		'$(FILE_MPI)' using 1:3 title 'hyperquicksort MPI' with lines lc rgb 'green';\
 		pause -1 \"Hit any key to continue\""
 
 mpi_debug: CFLAGS+=-g -O0 -DDEBUG
@@ -68,8 +67,13 @@ omp_debug: $(TARGET_OMP)
 statistics:
 	@cat $(FILE_OMP) | cut -d ' ' -f 2,3 | \
 		awk '{ qsum+=$$1; hsum+=$$2 } END \
-		{ speedup=qsum/hsum; print "speedup: " speedup " efficiency: " speedup/np " processes: " np  }' \
-		np="$$(echo "$(FILE_OMP)" | grep -o "_[[:digit:]]*." | sed 's/[_\.]//g')"
+		{ speedup=qsum/hsum; print "OpenMP Statistics:\n\tspeedup: " speedup " efficiency: " speedup/np " processes: " np }' \
+		np="$$(echo "$(FILE_OMP)" | grep -o "openmp_[[:digit:]]*." | sed 's/[openmp_\.]//g')"
+	@cat $(FILE_MPI) | cut -d ' ' -f 2,3 | \
+		awk '{ hsum+=$$2 } END \
+		{ speedup=qsum/hsum; print "MPI Statistics:\n\tspeedup: " speedup " efficiency: " speedup/np " processes: " np }' \
+		np="$$(echo "$(FILE_MPI)" | grep -o "mpi_[[:digit:]]*." | sed 's/[mpi_\.]//g')" \
+		qsum="$$(cat $(FILE_OMP) | cut -d ' ' -f 2,3 | awk '{ qsum+=$$1 } END { print qsum }')"
 
 clean:
 	-@rm -f $(TARGET)

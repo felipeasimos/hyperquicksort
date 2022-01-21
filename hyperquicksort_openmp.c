@@ -197,10 +197,11 @@ void swap_with_pair(unsigned long num_elements, unsigned long element_size, int 
     uint8_t merge_buf[ element_size * num_elements ];
 
     unsigned long high_partition = local_num_elements[id] - low_partitions[id];
+    #pragma omp barrier // gotta make sure 'pair_thread' updated their low_partition value
     unsigned long pair_high_partition = local_num_elements[pair_thread] - low_partitions[pair_thread];
     void* original_partition_arr = local_arrs[id];
 
-    #pragma omp barrier
+    #pragma omp barrier // make sure everybody calculated 'pair_high_partition' (since we will change 'local_num_elements' here)
     if(id > pair_thread) { // high processes
         // 1. get pair's high partition
         memcpy(recv_buf, get_element(local_arrs[pair_thread], element_size, low_partitions[pair_thread]), element_size * pair_high_partition);
@@ -217,7 +218,7 @@ void swap_with_pair(unsigned long num_elements, unsigned long element_size, int 
         local_num_elements[id] = low_partitions[id];
     }
 
-    #pragma omp barrier
+    #pragma omp barrier // make sure the other threads already used 'local_num_elements' (since we will change the value now)
     // merge recv_buf and local_arr, putting result in 'merge_buf' and returning its size
     local_num_elements[id] = merge_arrays(merge_buf, original_partition_arr, recv_buf, local_num_elements[id], n_recv_buf_elements, element_size, cmp_func);
     // copy 'merge_buf' to 'local_arr'
@@ -242,11 +243,10 @@ void _hyperquicksort(unsigned long num_elements, unsigned long element_size, int
         if(id == group_root_thread_id) {
             broadcast_pivot(element_size, local_arrs[id], local_num_elements[id], (uint8_t*)&pivot[group_id]);
         }
-        #pragma omp barrier
+        #pragma omp barrier // make sure everybody calls 'low_partitions' with an updated pivot value
         // since our local arr is always ordered, we can just do a binary search to find the size of the low partition
         low_partitions[id] = shallow_quicksort(local_arrs[id], element_size, local_num_elements[id], cmp_func, pivot[group_id]);
 
-        #pragma omp barrier
         // this calculation will return the right pair process (the modulo is used to deal with high id processes)
         int pair_thread = group_root_thread_id+((id+num_threads_per_group_halfed)%num_threads_per_group);
 
