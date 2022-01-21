@@ -379,7 +379,7 @@ void test() {
         printf("step size:\n");
         scanf("%lu", &step_size);
         char filename[50];
-        sprintf(filename, "results_%d.plt", comm_size);
+        sprintf(filename, "results_mpi_%d.plt", comm_size);
         results_file = fopen(filename, "w");
     }
     MPI_Bcast(&min_arr_size, 1, MPI_UNSIGNED_LONG, 0, MPI_COMM_WORLD);
