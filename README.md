@@ -59,4 +59,4 @@ make plot NP=2
 ```
 
 ![Plot showing quicksort curve above the hyperquicksort curve, getting farther as both of them get higher as they go right. \
-The Y Axis represents time and the X Axis is the array size](./README_results_4.png)
+The Y Axis represents time and the X Axis is the array size](./README_results_4_plot.png)
