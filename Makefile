@@ -10,8 +10,8 @@ CFLAGS=
 LDFLAGS=-lm
 
 NP ?= $(shell nproc)
-FILE_MPI ?=results_mpi_4.plt
-FILE_OMP ?=results_openmp_4.plt
+FILE_MPI =results_mpi_$(NP).plt
+FILE_OMP =results_openmp_$(NP).plt
 
 VALGRIND_COMMAND:=valgrind -q --tool=memcheck\
 		--track-origins=yes

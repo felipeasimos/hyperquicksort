@@ -32,21 +32,30 @@ All data is queried from the `.plt` files, generated automatically when you exec
 program. The format is simply columns of numbers, where the first is the array size,
 the second is the quicksort time and the last is the hyperquicksort time.
 
+Statistics are calculated using the quicksort time calculated in `hyperquicksort_openmp.c`,
+and the hyperquisort times measured in `hyperquicksort_openmp.c` and `hyperquicksort_mpi.c`.
+
+You can change which set of files the results will be based on with the `NP` option (it picks
+files according to the number of processes/threads used to generate them).
+
 ```
-# show statistics using data from 'results_mpi_4.plt'
+# show statistics using data from 'results_mpi_4.plt' and 'results_openmp_4.plt'
 make statistics
-speedup: 3.23323 efficiency: 0.808309 processes: 4
+OpenMP Statistics:
+	speedup: 2.79116 efficiency: 0.697791 processes: 4
+MPI Statistics:
+	speedup: 2.46827 efficiency: 0.617068 processes: 4
 
-# call gnuplot to show us the results
+# show statistics using data from 'results_mpi_2.plt' and 'results_openmp_2.plt'
+make statistics NP=2
+OpenMP Statistics:
+	speedup: 1.98561 efficiency: 0.992807 processes: 2
+MPI Statistics:
+	speedup: 1.8177 efficiency: 0.908849 processes: 2
+
+# call gnuplot to show us the results for 4 processes/threads or 2 processes/threads
 make plot
-```
-
-You can change the file where data comes from using the `FILE_OMP`/`FILE_MPI` option (default is `results_mpi_4.plt`):
-
-```
-# show statistics using the 'results_mpi_2.plt' file
-make statistics FILE_MPI=results_mpi_2.plt
-speedup: 1.97168 efficiency: 0.985842 processes: 2
+make plot NP=2
 ```
 
 ![Plot showing quicksort curve above the hyperquicksort curve, getting farther as both of them get higher as they go right. \
