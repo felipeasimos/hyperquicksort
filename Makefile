@@ -69,11 +69,22 @@ statistics:
 		awk '{ qsum+=$$1; hsum+=$$2 } END \
 		{ speedup=qsum/hsum; print "OpenMP Statistics:\n\tspeedup: " speedup " efficiency: " speedup/np " processes: " np }' \
 		np="$$(echo "$(FILE_OMP)" | grep -o "openmp_[[:digit:]]*." | sed 's/[openmp_\.]//g')"
+	@NUM_LINES=$$(wc -l $(FILE_OMP) | cut -d ' ' -f 1); NUM_LINES_HALFED=$$(( $${NUM_LINES}/2 ));\
+		sed "$${NUM_LINES_HALFED}q;d" $(FILE_OMP) | awk '{ s=$$2/$$3; print "\tat " $$1 ":\n\t\tspeedup: " s "\n\t\tefficiency: " s/np }' \
+		np=$$(echo $(FILE_OMP) | grep -o 'openmp_[[:digit:]]*.' | sed 's/[openmp_\.]//g');\
+		sed "$${NUM_LINES}q;d" $(FILE_OMP) | awk '{ s=$$2/$$3; print "\tat " $$1 ":\n\t\tspeedup: " s "\n\t\tefficiency: " s/np }' \
+		np=$$(echo $(FILE_OMP) | grep -o 'openmp_[[:digit:]]*.' | sed 's/[openmp_\.]//g');
 	@cat $(FILE_MPI) | cut -d ' ' -f 2,3 | \
 		awk '{ hsum+=$$2 } END \
 		{ speedup=qsum/hsum; print "MPI Statistics:\n\tspeedup: " speedup " efficiency: " speedup/np " processes: " np }' \
 		np="$$(echo "$(FILE_MPI)" | grep -o "mpi_[[:digit:]]*." | sed 's/[mpi_\.]//g')" \
 		qsum="$$(cat $(FILE_OMP) | cut -d ' ' -f 2,3 | awk '{ qsum+=$$1 } END { print qsum }')"
-
+	@NUM_LINES=$$(wc -l $(FILE_MPI) | cut -d ' ' -f 1); NUM_LINES_HALFED=$$(( $${NUM_LINES}/2 ));\
+		sed "$${NUM_LINES_HALFED}q;d" $(FILE_MPI) | awk '{ s=quick/$$3; print "\tat " $$1 ":\n\t\tspeedup: " s "\n\t\tefficiency: " s/np }' \
+		np=$$(echo $(FILE_MPI) | grep -o 'mpi_[[:digit:]]*.' | sed 's/[mpi_\.]//g') \
+		quick="$$( sed "$${NUM_LINES_HALFED}q;d" $(FILE_OMP) | awk '{ print $$2 }' )";\
+		sed "$${NUM_LINES}q;d" $(FILE_MPI) | awk '{ s=quick/$$3; print "\tat " $$1 ":\n\t\tspeedup: " s "\n\t\tefficiency: " s/np }' \
+		np="$$(echo $(FILE_MPI) | grep -o 'mpi_[[:digit:]]*.' | sed 's/[mpi_\.]//g')" \
+		quick="$$( sed "$${NUM_LINES}q;d" $(FILE_OMP) | awk '{ print $$2 }' )"
 clean:
 	-@rm -f $(TARGET)
