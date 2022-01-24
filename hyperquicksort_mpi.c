@@ -37,7 +37,7 @@ void* get_element(void* arr, unsigned long element_size, unsigned long idx) {
 }
 
 // cmp_func: 1 if a < b, 0 if a == b, -1 if a > b
-void quicksort(void* arr, unsigned long element_size, unsigned long num_elements, arr_type (*cmp_func)(void* a, void* b)) {
+void quicksort(void* arr, unsigned long element_size, unsigned long num_elements, int (*cmp_func)(void* a, void* b)) {
 
     if( num_elements < 2 ) return;
 
@@ -60,7 +60,7 @@ void quicksort(void* arr, unsigned long element_size, unsigned long num_elements
     quicksort(get_element(arr, element_size, lower_index + 1), element_size, num_elements - lower_index - 1, cmp_func);
 }
 
-unsigned long shallow_quicksort(void* arr, unsigned long element_size, unsigned long num_elements, arr_type (*cmp_func)(void* a, void* b), void* pivot) {
+unsigned long shallow_quicksort(void* arr, unsigned long element_size, unsigned long num_elements, int (*cmp_func)(void* a, void* b), void* pivot) {
 
     if(!num_elements) return 0;
     // if the first element is equal or greater than the pivot, return 0
@@ -248,7 +248,7 @@ void _hyperquicksort(void* local_arr, unsigned long element_size, unsigned long*
     MPI_Comm_free(&new_comm);
 }
 
-void hyperquicksort(void* arr, unsigned long element_size, unsigned long num_elements, arr_type (*cmp_func)(void* a, void* b), int comm_size, int world_rank) {
+void hyperquicksort(void* arr, unsigned long element_size, unsigned long num_elements, int (*cmp_func)(void* a, void* b), int comm_size, int world_rank) {
 
     if(num_elements <= (unsigned long)comm_size) {
         if(!world_rank) quicksort(arr, element_size, num_elements, arr_type_cmp);
@@ -286,7 +286,7 @@ void hyperquicksort(void* arr, unsigned long element_size, unsigned long num_ele
     free(local_arr);
 }
 
-double quicksort_test(void* original_arr, void* arr, unsigned long element_size, unsigned long num_elements, arr_type (*cmp_func)(void* a, void* b)) {
+double quicksort_test(void* original_arr, void* arr, unsigned long element_size, unsigned long num_elements, int (*cmp_func)(void* a, void* b)) {
 
     double quicksort_time = MPI_Wtime();
     quicksort(arr, element_size, num_elements, cmp_func);
@@ -316,7 +316,7 @@ double quicksort_test(void* original_arr, void* arr, unsigned long element_size,
     return quicksort_time;
 }
 
-void hyperquicksort_test(void* original_arr, void* arr, unsigned long element_size, unsigned long num_elements, arr_type (*cmp_func)(void* a, void* b), double* time, int comm_size, int rank) {
+void hyperquicksort_test(void* original_arr, void* arr, unsigned long element_size, unsigned long num_elements, int (*cmp_func)(void* a, void* b), double* time, int comm_size, int rank) {
     MPI_Barrier(MPI_COMM_WORLD);
     if(!rank) {
         *time = MPI_Wtime();

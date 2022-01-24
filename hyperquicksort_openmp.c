@@ -37,7 +37,7 @@ void* get_element(void* arr, unsigned long element_size, unsigned long idx) {
 }
 
 // cmp_func: 1 if a < b, 0 if a == b, -1 if a > b
-void quicksort(void* arr, unsigned long element_size, unsigned long num_elements, arr_type (*cmp_func)(void* a, void* b)) {
+void quicksort(void* arr, unsigned long element_size, unsigned long num_elements, int (*cmp_func)(void* a, void* b)) {
 
     if( num_elements < 2 ) return;
 
@@ -60,7 +60,7 @@ void quicksort(void* arr, unsigned long element_size, unsigned long num_elements
     quicksort(get_element(arr, element_size, lower_index + 1), element_size, num_elements - lower_index - 1, cmp_func);
 }
 
-double quicksort_test(void* original_arr, void* arr, unsigned long element_size, unsigned long num_elements, arr_type (*cmp_func)(void* a, void* b)) {
+double quicksort_test(void* original_arr, void* arr, unsigned long element_size, unsigned long num_elements, int (*cmp_func)(void* a, void* b)) {
 
     double quicksort_time = omp_get_wtime();
     quicksort(arr, element_size, num_elements, cmp_func);
@@ -126,7 +126,7 @@ void broadcast_pivot(unsigned long element_size, void* local_arr, unsigned long 
     }
 }
 
-unsigned long shallow_quicksort(void* arr, unsigned long element_size, unsigned long num_elements, arr_type (*cmp_func)(void* a, void* b), void* pivot) {
+unsigned long shallow_quicksort(void* arr, unsigned long element_size, unsigned long num_elements, int (*cmp_func)(void* a, void* b), void* pivot) {
 
     if(!num_elements) return 0;
     // if the first element is equal or greater than the pivot, return 0
@@ -239,23 +239,23 @@ void _hyperquicksort(unsigned long num_elements, unsigned long element_size, int
         int group_id = id / num_threads_per_group;
         int group_root_thread_id = group_id * num_threads_per_group;
 
-        // each group's root thread should write to the pivot
+        // 3. each group's root thread should write to the pivot
         if(id == group_root_thread_id) {
             broadcast_pivot(element_size, local_arrs[id], local_num_elements[id], (uint8_t*)&pivot[group_id]);
         }
-        #pragma omp barrier // make sure everybody calls 'low_partitions' with an updated pivot value
-        // since our local arr is always ordered, we can just do a binary search to find the size of the low partition
+        #pragma omp barrier // make sure everybody calls 'shallow_quicksort' with an updated pivot value
+        // 4. since our local arr is always ordered, we can just do a binary search to find the size of the low partition
         low_partitions[id] = shallow_quicksort(local_arrs[id], element_size, local_num_elements[id], cmp_func, pivot[group_id]);
 
-        // this calculation will return the right pair process (the modulo is used to deal with high id processes)
+        // 5. this calculation will return the right pair process ID (the modulo is used to deal with high id processes)
         int pair_thread = group_root_thread_id+((id+num_threads_per_group_halfed)%num_threads_per_group);
 
-        // a merge is done here, leaving the final local_arr still sorted
+        // 6. a merge is done here, leaving the final local_arr still sorted
         swap_with_pair(num_elements, element_size, num_threads, local_arrs, local_num_elements, low_partitions, cmp_func, id, pair_thread);
     }
 }
 
-void hyperquicksort(void* arr, unsigned long element_size, unsigned long num_elements, arr_type (*cmp_func)(void* a, void* b)) {
+void hyperquicksort(void* arr, unsigned long element_size, unsigned long num_elements, int (*cmp_func)(void* a, void* b)) {
 
     int num_threads;
     #pragma omp parallel
@@ -273,18 +273,18 @@ void hyperquicksort(void* arr, unsigned long element_size, unsigned long num_ele
  
     #pragma omp parallel
     {
-        // actual hyperquicksort algorithm
         int id = omp_get_thread_num();
-        // scatter the original arr into a local_arr for each process
+        // 1. scatter the original arr into a local_arr for each process
         local_arrs[id] = scatter_array(arr, element_size, num_elements, &local_num_elements[id], num_threads, id);
 
-        // sort local array
+        // 2. sort local array
         quicksort(local_arrs[id], element_size, local_num_elements[id], cmp_func);
     }
 
     for(unsigned long i = 0; i < logp; i++) {
 
         _hyperquicksort(num_elements, element_size, num_threads, local_arrs, local_num_elements, cmp_func, i);
+
 #ifdef DEBUG
         gather_array_seq(arr, element_size, num_threads, local_num_elements, local_arrs);
         for(int j = 0; j < num_threads; j++) {
@@ -306,7 +306,7 @@ void hyperquicksort(void* arr, unsigned long element_size, unsigned long num_ele
     }
 }
 
-void hyperquicksort_test(void* original_arr, void* arr, unsigned long element_size, unsigned long num_elements, arr_type (*cmp_func)(void* a, void* b), double* time) {
+void hyperquicksort_test(void* original_arr, void* arr, unsigned long element_size, unsigned long num_elements, int (*cmp_func)(void* a, void* b), double* time) {
     *time = omp_get_wtime();
     hyperquicksort(arr, element_size, num_elements, cmp_func);
     *time = omp_get_wtime() - *time;
