@@ -42,17 +42,39 @@ files according to the number of processes/threads used to generate them).
 # show statistics using data from 'results_mpi_4.plt' and 'results_openmp_4.plt'
 make statistics
 OpenMP Statistics:
-	speedup: 2.79116 efficiency: 0.697791 processes: 4
+	speedup: 2.52637 efficiency: 0.631591 processes: 4
+	at 500000:
+		speedup: 2.6081
+		efficiency: 0.652026
+	at 1000000:
+		speedup: 2.87959
+		efficiency: 0.719896
 MPI Statistics:
-	speedup: 2.46827 efficiency: 0.617068 processes: 4
-
+	speedup: 2.23171 efficiency: 0.557927 processes: 4
+	at 500000:
+		speedup: 2.07705
+		efficiency: 0.519262
+	at 1000000:
+		speedup: 2.4268
+		efficiency: 0.6067
 # show statistics using data from 'results_mpi_2.plt' and 'results_openmp_2.plt'
 make statistics NP=2
 OpenMP Statistics:
-	speedup: 1.98561 efficiency: 0.992807 processes: 2
+	speedup: 1.90582 efficiency: 0.952909 processes: 2
+	at 500000:
+		speedup: 2.05442
+		efficiency: 1.02721
+	at 1000000:
+		speedup: 1.70876
+		efficiency: 0.854381
 MPI Statistics:
-	speedup: 1.8177 efficiency: 0.908849 processes: 2
-
+	speedup: 1.90337 efficiency: 0.951686 processes: 2
+	at 500000:
+		speedup: 1.89938
+		efficiency: 0.949688
+	at 1000000:
+		speedup: 1.95389
+		efficiency: 0.976947
 # call gnuplot to show us the results for 4 processes/threads or 2 processes/threads
 make plot
 make plot NP=2
