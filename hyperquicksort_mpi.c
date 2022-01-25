@@ -44,18 +44,12 @@ void quicksort(void* arr, unsigned long element_size, unsigned long num_elements
     unsigned long lower_index = 0;
     for(unsigned long i = 1; i < num_elements; i++) {
         void* current_element = get_element(arr, element_size, i);
-        switch( cmp_func(current_element, arr) ) {
-            case 1: 
-                swap(current_element, get_element(arr, element_size, ++lower_index), element_size);
-                break;
-            case 0:
-            case -1:
-                break;
+        if(cmp_func(current_element, arr) > 0) {
+            swap(current_element, get_element(arr, element_size, ++lower_index), element_size);
         }
     }
 
     swap(get_element(arr, element_size, lower_index), arr, element_size);
-
     quicksort(arr, element_size, lower_index, cmp_func);
     quicksort(get_element(arr, element_size, lower_index + 1), element_size, num_elements - lower_index - 1, cmp_func);
 }
@@ -64,7 +58,6 @@ unsigned long shallow_quicksort(void* arr, unsigned long element_size, unsigned 
 
     if(!num_elements) return 0;
     // if the first element is equal or greater than the pivot, return 0
-    if(cmp_func(pivot, arr) != -1) return 0;
 
     // make a binary search to find the index of the first element that the pivot is smaller
     unsigned long first = 0;
@@ -73,25 +66,21 @@ unsigned long shallow_quicksort(void* arr, unsigned long element_size, unsigned 
     while(first != last) {
 
         unsigned long median_idx = (first + last) >> 1;
-        switch( cmp_func(get_element(arr, element_size, median_idx), pivot) ) {
+        if( cmp_func(get_element(arr, element_size, median_idx), pivot) > 0 ) {
 
-            // if median is smaller than the pivot
-            case 1:
-                // if this is true, there is only the 'first' and 'last' elements left
+                // if median is smaller than the pivot
                 if(first == median_idx) {
+                    // if this is true, there is only the 'first' and 'last' elements left
                     first = last;
                 } else {
                     first = median_idx;
                 }
-                break;
+        } else {
             // if median is equal or greater than the pivot
-            case 0:
-            case -1:
-                last = median_idx;
-                break;
+            last = median_idx;
         }
     }
-    return first + (cmp_func(get_element(arr, element_size, first), pivot) == 1);
+    return first + (cmp_func(get_element(arr, element_size, first), pivot) > 0);
 }
 
 void* scatter_array(void* arr, unsigned long element_size, unsigned long num_elements, unsigned long* local_num_elements, int comm_size, int rank) {
@@ -166,17 +155,12 @@ unsigned long merge_arrays(void* result, void* a, void* b, unsigned long a_size,
         } else {
             comp = cmp_func( get_element(a, element_size, a_idx), get_element(b, element_size, b_idx) );
         }
-        switch( comp ) {
-
-            // b < a
-            case -1:
-                memcpy( get_element(result, element_size, result_idx), get_element(b, element_size, b_idx++), element_size );
-                break;
-            // a < b
-            case 0:
-            case 1:
-                memcpy( get_element(result, element_size, result_idx), get_element(a, element_size, a_idx++), element_size );
-                break;
+        // b < a
+        if(comp < 0) {
+            memcpy( get_element(result, element_size, result_idx), get_element(b, element_size, b_idx++), element_size );
+        // a <= b
+        } else {
+            memcpy( get_element(result, element_size, result_idx), get_element(a, element_size, a_idx++), element_size );
         }
     }
     return result_size;
@@ -296,7 +280,7 @@ double quicksort_test(void* original_arr, void* arr, unsigned long element_size,
     // check that the array is indeed sorted
     for(unsigned long i = 1; i < num_elements; i++) {
 
-        if(cmp_func(get_element(arr, element_size, i-1), get_element(arr, element_size, i)) == -1) {
+        if(cmp_func(get_element(arr, element_size, i-1), get_element(arr, element_size, i)) < 0) {
 
             printf("ERROR in quicksort in index %lu and %lu!\n", i-1, i);
             printf("original arr:\n");
